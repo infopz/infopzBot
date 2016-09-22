@@ -3,8 +3,7 @@ import requests
 import datetime
 import time
 
-'''comando Read
-   cambio Euro-Dollaro'''
+#cambio Euro-Dollaro
 
 def dataTempo():
    current_time = time.localtime()
@@ -55,10 +54,11 @@ def send_botogram_link(chat, message):
     chat.send("A Rega Bongiorno")
 
 @bot.message_matches(r'([a-zA-Z0-9\-]+)/([a-zA-Z0-9\-\._]+)', multiple=True)
-def apple_links(chat, message, matches):
-    url = "http://www.{}.com/{}".format(*matches)
+def github_links(chat, message, matches):
+    url = "http://www.github.com/{}/{}".format(*matches)
     if requests.head(url).status_code != 404:
         chat.send(url)
+    else: chat.send("Il link non puo essere generato")
 
 if __name__ == "__main__":
     bot.run()
