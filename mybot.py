@@ -15,7 +15,7 @@ bot = botogram.create("290577957:AAGu15bceNMkGllsC8Hk7M6AhE2vbkItfCE")
 bot.about="Questo è il bot di Infopz"
 bot.owner="@infopz"
 
-text_file = open("CoseSalvate.txt", "a")
+
 
 @bot.command("hello")
 def hello_command(chat, message, args):
@@ -23,13 +23,32 @@ def hello_command(chat, message, args):
 
 @bot.command("ds") #salva messaggio ricevuto con ora e data
 def save_command(chat, message, args):
+    file = open("CoseSalvate.txt", "a")  
     mr=message.text
     mr=mr[4:]
-    dt=dataTempo()
-    ms=dt+" _ "+mr+"\n"
-    text_file.write(ms)
-    text_file.close()
+    dt=dataTempo()  
+    ms=dt+" | "+mr+"\n"
+    file.write(ms)
+    file.close()
     message.reply("Messaggio Salvato!", preview=True, syntax=None, extra=None, notify=True)
+
+@bot.command("leggi")
+def leggi_command(chat, message, args):
+    file = open("CoseSalvate.txt", "r")
+    lines=file.readlines()
+    n=message.text
+    m=sum(1 for line in open('CoseSalvate.txt')) #calcolo righe file
+    if n[7:] is "": #verifica no n
+      n=m
+    else: n=int(n[7:])
+    if n>m:
+      chat.send("Non ci sono abbastanza righe\nIl numero massimo è "+str(m)) 
+    else: 
+      risp=""
+      for line in lines[(m-n):m]:
+        risp=risp+line
+      chat.send(risp[:-1])
+      
 
 @bot.message_contains("infopz")
 def send_botogram_link(chat, message):
@@ -43,6 +62,3 @@ def apple_links(chat, message, matches):
 
 if __name__ == "__main__":
     bot.run()
-
-
-text_file.close()
