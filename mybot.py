@@ -18,10 +18,14 @@ bot.owner="@infopz"
 
 @bot.command("hello")
 def hello_command(chat, message, args):
+    '''Ciaone!
+       Ti saluta con un bel ciao'''
     chat.send("Hello World")
 
 @bot.command("ds") #salva messaggio ricevuto con ora e data
 def save_command(chat, message, args):
+    '''Salva il messaggio
+       Questo comando salva in un file txt il messaggio indicando a fianco data e ora'''
     file = open("CoseSalvate.txt", "a")  
     mr=message.text
     mr=mr[4:]
@@ -33,6 +37,8 @@ def save_command(chat, message, args):
 
 @bot.command("leggi")
 def leggi_command(chat, message, args):
+    '''Legge le cose salvate
+    Legge n righe a partire dal fondo nel file CoseSalvate.txt, se non vengono forniti legge l'intero file'''
     file = open("CoseSalvate.txt", "r")
     lines=file.readlines()
     n=message.text
