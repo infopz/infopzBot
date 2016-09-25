@@ -1,7 +1,8 @@
 import botogram
 import requests
-import datetime
 import time
+import sport
+import apiKey
 from urllib.request import urlopen
 
 def dataTempo():
@@ -16,8 +17,10 @@ def ottieniCambio():
    page=float(page[0:6])
    return(page)
 
-bot = botogram.create("290577957:AAGu15bceNMkGllsC8Hk7M6AhE2vbkItfCE")
-bot.about="Questo è il bot di Infopz"
+keyBot = apiKey.apiBot()
+
+bot = botogram.create(keyBot)
+bot.about ="Questo è il bot di Infopz"
 bot.owner="@infopz"
 
 @bot.command("hello")
@@ -78,6 +81,22 @@ def cambio_command(chat, message, args):
     else:
        ris="Valuta inserita non corretta o non data\nInserici un valore con € o $ alla fine"
     chat.send(ris)
+
+@bot.command('seriea')
+def seriea_command(chat, message, args):
+    m=message.text
+    m=m[8:]
+    a=["",""]
+    if m=="":
+      oggi=sport.trovaGiornata()
+      a=sport.partiteGior(oggi)
+    elif m=="classifica":
+      a[1]=sport.classifica()
+      a[0]="Ecco la classifica di Serie A"
+    else:
+      a=sport.partiteGior(m)
+    chat.send(a[0])
+    chat.send(a[1])
 
 @bot.message_contains("infopz")
 def send_botogram_link(chat, message):
