@@ -1,8 +1,16 @@
 import requests
 import time
+from urllib.request import urlopen
 
 import apiKey
 
+
+def ottieniCambio():
+   data=urlopen("http://dollaro-euro.it/")
+   page= str(data.read())
+   page=page[3035:]
+   page=float(page[0:6])
+   return(page)
 
 def trovaCord(cit):
   keyGM = apiKey.apiGoogleMaps()

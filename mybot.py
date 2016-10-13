@@ -9,36 +9,34 @@ import apiKey
 import topsec
 import altriCom
 
-def scriviComando(com):
-   a=com.text
-   b='@'+com.sender.username
-   now = datetime.now()
-   h=str(time.strftime('%H'))
-   m=str(time.strftime('%M'))
-   s=str(time.strftime('%S'))
-   mes=str(h)+':'+str(m)+'.'+str(s)+' -  COMMAND  - '+b+' '+a
-   print (mes)
-
-
-def control(user):
+def control(mess):
   usPer = open("utentiPermessi.txt", "r")
   perm=False
   for line in usPer.readlines():
-    if user.username==line[:-1]:
+    if mess.sender.username==line[:-1]:
        perm=True
+       a=mess.text
+       b='@'+mess.sender.username
+       now = datetime.now()
+       h=str(time.strftime('%H'))
+       m=str(time.strftime('%M'))
+       s=str(time.strftime('%S'))
+       mes=str(h)+':'+str(m)+'.'+str(s)+' -  COMMAND  - '+b+' '+a
+    else:
+       a=mess.text
+       b='@'+mess.sender.username
+       now = datetime.now()
+       h=str(time.strftime('%H'))
+       m=str(time.strftime('%M'))
+       s=str(time.strftime('%S'))
+       mes=str(h)+':'+str(m)+'.'+str(s)+' -   DENIED   - '+b+' '+a
+    print (mes)
   return perm
 
 def dataTempo():
    current_time = time.localtime()
    dt=time.strftime('%Y.%m.%d,%H.%M', current_time)
    return dt
-
-def ottieniCambio():
-   data=urlopen("http://dollaro-euro.it/")
-   page= str(data.read())
-   page=page[3035:]
-   page=float(page[0:6])
-   return(page)
 
 def buongiorno(num, nome):
    cord=altriCom.trovaCord('Modena')
@@ -57,20 +55,18 @@ bot.owner="@infopz"
 def hello_command(chat, message, args):
     '''Ciaone!
        \nTi saluta con un bel ciao'''
-    if control(message.sender)==False:
+    if control(message)==False:
        chat.send("Non sei autorizzato a eseguire questo comando")
     else: 
-       scriviComando(message) 
        chat.send("Hello World")
 
 @bot.command("ds") #salva messaggio ricevuto con ora e data
 def save_command(chat, message, args):
     '''Salva il messaggio
        \nQuesto comando salva in un file txt il messaggio indicando a fianco data e ora'''
-    if control(message.sender)==False:
+    if control(message)==False:
        chat.send("Non sei autorizzato a eseguire questo comando")
     else:
-       scriviComando(message)
        file = open("CoseSalvate.txt", "a")  
        mr=message.text
        mr=mr[4:]
@@ -87,10 +83,9 @@ def save_command(chat, message, args):
 def leggi_command(chat, message, args):
     '''Legge le cose salvate
     \nLegge n righe a partire dal fondo nel file CoseSalvate.txt, se non vengono forniti legge l'intero file'''
-    if control(message.sender)==False:
+    if control(message)==False:
        chat.send("Non sei autorizzato a eseguire questo comando")
     else:
-       scriviComando(message)
        file = open("CoseSalvate.txt", "r")
        lines=file.readlines()
        n=message.text
@@ -110,11 +105,10 @@ def leggi_command(chat, message, args):
 def cambio_command(chat, message, args):
     '''Cambia dollari in euro e viceversa
        \nCambia i Dollari in euro e Euro in dollari in base al simbolo di valuta messo dopo il numero. \nSe viene fornita la parola Tasso viene fornito il tasso di cambio €/$'''
-    if control(message.sender)==False:
+    if control(message)==False:
        chat.send("Non sei autorizzato a eseguire questo comando")
     else:
-       scriviComando(message)
-       cambio=ottieniCambio()
+       cambio=altriCom.ottieniCambio()
        n=message.text
        n=n[8:]
        if n=='tasso':
@@ -140,10 +134,9 @@ def seriea_command(chat, message, args):
     \nSe aggiungi oggi dopo il comando mostra le partite in programma per oggi con i relativi orari
     \nSe si aggiunge l'opzione domani esegue la stessa cosa di 'oggi' ma con la giornata di domani
     \nCon l'opzione 'classifica' viene viasulizzata la classifica di serie a'''
-    if control(message.sender)==False:
+    if control(message)==False:
        chat.send("Non sei autorizzato a eseguire questo comando")
     else:
-       scriviComando(message)
        m=message.text
        m=m[8:]
        a=["",""]
@@ -173,10 +166,9 @@ def seriea_command(chat, message, args):
 def ip_command(chat, message, args):
    '''Visualizza l'ip pubblico di Infopz
     \nComando da usare per aggiornate il mio ip dinamico nel caso non lo facesse in automatico'''
-   if control(message.sender)==False:
+   if control(message)==False:
      chat.send("Non sei autorizzato a eseguire questo comando")
    else:
-     scriviComando(message)
      data=urlopen("http://www.whatismypublicip.com/")
      page= str(data.read())
      page=page[5480:]
@@ -203,10 +195,9 @@ def meteo_command(chat, message, args):
     \nSe non specificato niente mostra il meteo orario per Modena
     \nSe viene specificato l'opzione 'd' viene visualizzato il meteo per i prossimi giorni
     \nSe viene specifica una citta' mostra il meteo (orario o giornaliero) per quella determinata citta', se non viene specificato niente la citta' di default e' Modena'''
-  if control(message.sender)==False:
+  if control(message)==False:
        chat.send("Non sei autorizzato a eseguire questo comando")
   else:
-    scriviComando(message)
     m=message.text
     m=m[7:]+' '
     mes = m.split(' ', 2)
@@ -233,7 +224,13 @@ def meteo_command(chat, message, args):
 def prova_command(chat, message, args):
   '''Invia il tuo chat ID a Infopz
     \nInvia a Infopz l'ID della tua chat con il Bot'''
-  scriviComando(message)
+  a=mess.text
+  b='@'+mess.sender.username
+  now = datetime.now()
+  h=str(time.strftime('%H'))
+  m=str(time.strftime('%M'))
+  s=str(time.strftime('%S'))
+  print(str(h)+':'+str(m)+'.'+str(s)+' -  COMMAND  - '+b+' '+a)
   print(message.sender.id)
 
 @bot.timer(60)
@@ -247,5 +244,6 @@ def spam(bot):
         l = lines.split(' ', 2)
         buongiorno(l[0], l[1][:-1])
      buong.close()
+
 if __name__ == "__main__":
     bot.run()
