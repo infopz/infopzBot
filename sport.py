@@ -1,6 +1,6 @@
 import requests
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import apiKey
 
 keyMash = apiKey.apiMashape()
@@ -21,17 +21,23 @@ def trovaGiornata():
   ri = requests.get("https://sportsop-soccer-sports-open-data-v1.p.mashape.com/v1/leagues/serie-a/seasons/16-17/rounds", headers={"X-Mashape-Key":keyMash, "Accept": "application/json"})
   ri = ri.json()
   for i in ri['data']['rounds']:
-    di = i['start_date']
-    Y=int(di[:4])
-    m=int(di[5:7])
-    d=int(di[8:10])
+    if giorn == 1:
+      a='2016-08-20T18:00:00+0200'
+      Y=int(a[:4])
+      m=int(a[5:7])
+      d=int(a[8:10])
+      di =  datetime(Y, m, d)
+    else:
+      di = a + timedelta(days=1)
     df = i['end_date']
-    Y2=int(df[:4])
-    m2=int(df[5:7])
-    d2=int(df[8:10])
-    dig=[Y, m, d]
-    dfg=[Y2, m2, d2]
-    tf=(datetime(dig[0], dig[1], dig[2]) <= datetime(dt[0], dt[1], dt[2])) and (datetime(dfg[0], dfg[1], dfg[2]) >= datetime(dt[0], dt[1], dt[2]))
+    Y=int(df[:4])
+    m=int(df[5:7])
+    d=int(df[8:10])
+    df =  datetime(Y, m, d)
+    dfe = df + timedelta(days=1)
+    a = dfe
+    do = datetime(dt[0], dt[1], dt[2])
+    tf = (do >= di) and (do <= dfe)
     if tf==False:
       giorn+=1
     else:
@@ -50,7 +56,7 @@ def stampaPart(ri):
 
 def partiteGior(gior):
   giorS = 'giornata-'+str(gior)
-  ri = requests.get("https://sportsop-soccer-sports-open-data-v1.p.mashape.com/v1/leagues/serie-a/seasons/16-17/rounds/"+giorS+"/matches", headers={"X-Mashape-Key":keyMash, "Accept": "application/json"})
+  ri = requests.get(("https://sportsop-soccer-sports-open-data-v1.p.mashape.com/v1/leagues/serie-a/seasons/16-17/rounds/"+giorS+"/matches"), headers={"X-Mashape-Key":keyMash, "Accept": "application/json"})
   ri = ri.json()
   mes='Ecco le partite della '+str(gior)+'a giornata'
   par=stampaPart(ri)
@@ -73,9 +79,48 @@ def classifica():
   return(cl)
 
 
+def partiteOggi(gior):
+  giorS = 'giornata-'+str(gior)
+  ri = requests.get(("https://sportsop-soccer-sports-open-data-v1.p.mashape.com/v1/leagues/serie-a/seasons/16-17/rounds/"+giorS), headers={"X-Mashape-Key":keyMash, "Accept": "application/json"})
+  ri = ri.json()
+  dtO = dataOra()
+  el=''
+  for i in ri['data']['rounds'][0]['matches']:
+    dp = i['date_match']
+    Y=int(dp[:4])
+    m=int(dp[5:7])
+    d=int(dp[8:10])
+    pO = (datetime(dtO[0], dtO[1], dtO[2])) == (datetime(Y, m, d))
+    if pO == True:
+      squad1=i['home_team']
+      squad2=i['away_team']
+      ora=i['date_match'][11:16]
+      risult=i['match_result']
+      part = (ora+' '+squad1+'-'+squad2+' '+risult+'\n')
+      el = el+part
+  return(el)
 
 
-
+def partiteDomani(gior):
+  giorS = 'giornata-'+str(gior)
+  ri = requests.get(("https://sportsop-soccer-sports-open-data-v1.p.mashape.com/v1/leagues/serie-a/seasons/16-17/rounds/"+giorS), headers={"X-Mashape-Key":keyMash, "Accept": "application/json"})
+  ri = ri.json()
+  dtO = dataOra()
+  el=''
+  for i in ri['data']['rounds'][0]['matches']:
+    dp = i['date_match']
+    Y=int(dp[:4])
+    m=int(dp[5:7])
+    d=int(dp[8:10])
+    tomorrow = datetime(dtO[0], dtO[1], dtO[2])+timedelta(days=1)
+    pO = tomorrow == datetime(Y, m, d)
+    if pO == True:
+      squad1=i['home_team']
+      squad2=i['away_team']
+      ora=i['date_match'][11:16]
+      part = (ora+' '+squad1+'-'+squad2+' '+'\n')
+      el = el+part
+  return(el)
 
 
 
