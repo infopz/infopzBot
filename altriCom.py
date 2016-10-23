@@ -14,13 +14,13 @@ def ottieniCambio():
 
 def trovaCord(cit):
   keyGM = apiKey.apiGoogleMaps()
+  cit = cit.replace(' ','')
   risG = requests.get('https://maps.googleapis.com/maps/api/geocode/json?address='+str(cit)+'&key='+keyGM)
   risG = risG.json()
   lat=risG['results'][0]['geometry']['location']['lat']
   lng=risG['results'][0]['geometry']['location']['lng']
   cord=[lat, lng]
   return cord
-  
 
 def ottieniDati(lat, lon):
   keyDS = apiKey.apiDarkSky()
@@ -40,13 +40,13 @@ def convertiGiorno(giorno):
    return giCor
 
 
-def mOrario(risp):
-  a=0
+def mOrario(risp, volte):
+  a=volte
   dati=''
   e=''
   dati=risp['hourly']['summary']+'\n'
   for i in risp['hourly']['data']:
-    if a==8: break
+    if a==0: break
     o=int(time.strftime('%H', time.gmtime(i['time'])))
     if (o+2)>=24: o=o-24
     o=str(o+2)
@@ -56,12 +56,12 @@ def mOrario(risp):
     elif p=='Nubi Sparse': e='\U0001F325'
     elif p=='Poco Nuvoloso': e='\U0001F324'
     elif p=='Pioggia Molto Leggera': e='\U0001F326'
-    #elif p=='Nuvoloso': e=''
+    elif p=='Nuvoloso': e='\U00002601'
     elif p=='Pioggia Leggera': e='\U0001F326'
-    #elif p=='Pioggia': 
+    elif p=='Pioggia': e='\U0001F327'
     if int(o)%2==0: 
       dati+=o+': '+e+' '+t+'° '+p+'\n'
-      a+=1
+      a-=1
     e=''
   return dati
 

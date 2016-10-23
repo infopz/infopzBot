@@ -24,36 +24,45 @@ def prepare_memory(shared):
   shared['meteo'] = mess
   shared['giornata'] = oggi
   shared['seriea'] = ser
+  shared['tipoMet'] = ''
+  shared['citta'] = ''
 
 @bot.process_message
 def message_received(chat, message, shared):
-  print(shared['comm'])
   if shared['comm'] == 'seriea':
     serieaOutput(message.text, chat, shared)
 
+  if shared['comm'] == 'cambio':
+    effettuaCambio(chat, message, shared)
+
   if shared['tipoMet'] == 'chiedo':
-    if message.text == 'Meteo della Giornata':
+    if message.text == '\U0001F5DEGiornata':
       shared['tipoMet'] = 'day'
-    elif message.text == 'Meteo Settimanale':
+    elif message.text == '\U0001F4C5Settimanale':
       shared['tipoMet'] = 'week'
     inviaMeteo(shared['citta'], shared['tipoMet'], chat, message, shared)
     shared['comm'] = ''
+  
+  if shared['citta'] == 'altra':
+    shared['citta'] = message.text
 
   if shared['comm'] == 'meteo':
     if shared['citta'] == '':
-      if message.text == 'Altra città':
-        chat.send('/metoe: dimmi di quale cità vuoi avere il meteo')
+      if message.text == '\U0001F30DAltra città':
         shared['citta'] = 'altra'
-      elif message.text == 'Modena':
+        chat.send('/meteo: dimmi di quale cità vuoi avere il meteo')
+      elif message.text == '\U0001F4CDModena':
         shared['citta'] = 'modena'
         chiediTipoPrev(chat, message, shared)
     else:
       if shared['tipoMet'] != 'chiedo':
         chiediTipoPrev(chat, message, shared)
-  if shared['citta'] == 'altra':
-    shared['citta'] = message.text
 
-  
+@bot.command('start', hidden=True)
+def start_command(chat, message):
+  control(message)
+  mess='Ciao, benevenuto su @infopzBot\nPer iniziare seleziona un comando tra quelli presenti\n\nPer avere informazioni più dettagliate su cosa fanno i singoli comandi puoi usare il comando /help\n\nNel caso incontrassi difficoltà o problemi non esitare a contattarmi! (@infopz)'
+  bot.api.call("sendMessage", {"chat_id": chat.id, "text": mess, "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "/seriea"}, {"text": "/cambio"}], [{"text": "/meteo"}]], "one_time_keyboard": false, "resize_keyboard": true}'})
 
 @bot.command("hello", hidden=True)
 def hello_command(chat, message, args):
@@ -63,26 +72,12 @@ def hello_command(chat, message, args):
     chat.send("Hello World")
 
 @bot.command("cambio")
-def cambio_command(chat, message, args):
+def cambio_command(chat, message, args, shared):
     '''Cambia dollari in euro e viceversa
        \nCambia i Dollari in euro e Euro in dollari in base al simbolo di valuta messo dopo il numero. \nSe viene fornita la parola Tasso viene fornito il tasso di cambio €/$'''
     control(message)
-    cambio=altriCom.ottieniCambio()
-    n=message.text
-    n=n[8:]
-    if n=='tasso':
-       ris="Il tasso di oggi è "+str(cambio)+" €/$"
-    elif (n[-1:])=='€':
-       n=float(n[:-1])
-       ris=round(float(n/cambio), 3)
-       ris=str(n)+"€ sono "+str(ris)+"$"
-    elif (n[-1:])=='$':
-       n=float(n[:-1])
-       ris=round(float(n*cambio), 3)
-       ris=str(n)+"$ sono "+str(ris)+"€"
-    else:
-       ris="Valuta inserita non corretta o non data\nInserici un valore con € o $ alla fine"
-    chat.send(ris)
+    shared['comm'] = 'cambio'
+    chat.send('/cambio: inserisci un valore seguito dal simbolo')
 
 @bot.command('seriea')
 def seriea_command(chat, message, args, shared):
@@ -95,8 +90,7 @@ def seriea_command(chat, message, args, shared):
     \nCon l'opzione 'classifica' viene viasulizzata la classifica di serie a'''
     control(message)
     shared['comm'] = 'seriea'
-    print(shared['comm'])
-    bot.api.call("sendMessage", {"chat_id": chat.id, "text": '/seriea: seleziona una opzione', "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "Partite della Giornata"}, {"text": "Partite di Oggi"}], [{"text": "Partite di Domani"}, {"text": "Classifica"}]], "one_time_keyboard": true, "resize_keyboard": true}'})
+    bot.api.call("sendMessage", {"chat_id": chat.id, "text": '/seriea: seleziona una opzione', "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "\U0001F5DEPartite Giornata"}, {"text": "\U0001F51BPartite di Oggi"}], [{"text": "\U0001F51CPartite di Domani"}, {"text": "\U0001F4CAClassifica"}]], "one_time_keyboard": false, "resize_keyboard": true}'})
 
 
 @bot.command('ip', hidden=True)
@@ -136,22 +130,8 @@ def meteo_command(chat, message, args, shared):
   shared['comm'] = 'meteo'
   shared['citta'] = ''
   shared['tipoMet'] = ''
-  bot.api.call("sendMessage", {"chat_id": chat.id, "text": '/meteo: seleziona una opzione', "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "Modena"}, {"text": "Altra città"}]], "one_time_keyboard": true, "resize_keyboard": true}'})
-  '''if mes[0]=='':
-    mess = shared['meteo']
-  elif mes[0]=='d':
-    if mes[1]=='':
-      dat=altriCom.ottieniDati(str(44.647128),str(10.9252269))
-      mess=altriCom.mGiorni(dat)
-    else:
-      cord=altriCom.trovaCord(mes[1])
-      dat=altriCom.ottieniDati(str(cord[0]),str(cord[1]))
-      mess=altriCom.mGiorni(dat)
-  else:
-    cord=altriCom.trovaCord(mes[0])
-    dat=altriCom.ottieniDati(str(cord[0]),str(cord[1]))
-    mess=altriCom.mOrario(dat, 10)
-  chat.send(mess)'''
+  bot.api.call("sendMessage", {"chat_id": chat.id, "text": '/meteo: seleziona una opzione', "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "\U0001F4CDModena"}, {"text": "\U0001F30DAltra città"}]], "one_time_keyboard": false, "resize_keyboard": true}'})
+ 
    
 @bot.command('inviaID', hidden=True)
 def inviaID_command(chat, message, args):
@@ -168,9 +148,9 @@ def wake_command(chat, message, args):
   else:
     chat.send('Solo @infopz puo eseguire questo comando')
 
-@bot.command('me')
+@bot.command('me', hidden=True)
 def provashames(chat, message, args, shared):
-  bot.api.call("sendMessage", {"chat_id": chat.id, "text": 'Scegli', "parse_mode": "HTML", "reply_markup": {'{"force_reply": true, "selective": true}', '{"keyboard": [[{"text": "Return back", "text}]], "one_time_keyboard": true, "resize_keyboard": true}'}})
+  print(message.text)
 
 
 @bot.timer(300)
@@ -240,26 +220,27 @@ def fmeteoDom(num, nome):
 def serieaOutput(m, chat, shared):
   a=["",""]
   oggi=shared['giornata']
-  if m=="Partite della Giornata":
+  if m=="\U0001F5DEPartite Giornata":
     a=shared['seriea']
-  elif m=="Classifica":
+  elif m=="\U0001F4CAClassifica":
     a[1]=sport.classifica()
     a[0]="Ecco la classifica di Serie A"
-  elif m=='Partite di Oggi':
+  elif m=='\U0001F51BPartite di Oggi':
     a[0]='Ecco le partite di oggi'
     a[1]=sport.partiteOggi(oggi)
     if a[1]=='':
       a[0]='Non ci sono parite oggi'
-  elif m=='Partite di Domani':
+  elif m=='\U0001F51CPartite di Domani':
     a[0]='Ecco le partite di domani'
     a[1]=sport.partiteDomani(oggi)
     if a[1]=='':
       a[0]='Non sono previste partite per domani'
   if a[0]!='': chat.send(a[0])
-  if a[1]!='': chat.send(a[1])
+  if a[1]!='': 
+    bot.api.call("sendMessage", {"chat_id": chat.id, "text": a[1], "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "/seriea"}, {"text": "/cambio"}], [{"text": "/meteo"}]], "one_time_keyboard": false, "resize_keyboard": true}'})
 
 def chiediTipoPrev(chat, message, shared):
-  bot.api.call("sendMessage", {"chat_id": chat.id, "text": '/meteo: seleziona il tipo di previsione', "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "Meteo della Giornata"}, {"text": "Meteo Settimanale"}]], "one_time_keyboard": true, "resize_keyboard": true}'})
+  bot.api.call("sendMessage", {"chat_id": chat.id, "text": '/meteo: seleziona il tipo di previsione', "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "\U0001F5DEGiornata"}, {"text": "\U0001F4C5Settimanale"}]], "one_time_keyboard": false, "resize_keyboard": true}'})
   shared['tipoMet'] = 'chiedo'
 
 def inviaMeteo(citt, tip, chat, message, shared):
@@ -278,7 +259,26 @@ def inviaMeteo(citt, tip, chat, message, shared):
       cord=altriCom.trovaCord(citt)
       dat=altriCom.ottieniDati(str(cord[0]),str(cord[1]))
       mess=altriCom.mGiorni(dat)
-  chat.send(mess)
+  bot.api.call("sendMessage", {"chat_id": chat.id, "text": mess, "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "/seriea"}, {"text": "/cambio"}], [{"text": "/meteo"}]], "one_time_keyboard": false, "resize_keyboard": true}'})
+  shared['comm'] = ''
+  shared['citta'] = ''
+  shared['tipoMet'] = ''
+
+def effettuaCambio(chat, message, shared):
+  cambio=altriCom.ottieniCambio()
+  n=message.text
+  if (n[-1:])=='€':
+     n=float(n[:-1])
+     ris=round(float(n/cambio), 3)
+     ris=str(n)+"€ sono "+str(ris)+"$"
+  elif (n[-1:])=='$':
+     n=float(n[:-1])
+     ris=round(float(n*cambio), 3)
+     ris=str(n)+"$ sono "+str(ris)+"€"
+  else:
+     ris="Valuta inserita non corretta o non data\nInserici un valore con € o $ alla fine"
+  bot.api.call("sendMessage", {"chat_id": chat.id, "text": ris, "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "/seriea"}, {"text": "/cambio"}], [{"text": "/meteo"}]], "one_time_keyboard": false, "resize_keyboard": true}'})
+  shared['comm'] = ''
 
 
 if __name__ == "__main__":
