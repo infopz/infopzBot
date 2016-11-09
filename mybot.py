@@ -35,13 +35,16 @@ def seriea_command(chat, message, args, shared):
     \nCon l'opzione 'classifica' viene viasulizzata la classifica di serie a'''
     control(message)
     shared['comm'] = 'seriea'
-    bot.api.call("sendMessage", {"chat_id": chat.id, "text": '/seriea: seleziona una opzione', "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "\U0001F5DEPartite Giornata"}, {"text": "\U0001F51BPartite di Oggi"}], [{"text": "\U0001F51CPartite di Domani"}, {"text": "\U0001F4CAClassifica"}]], "one_time_keyboard": false, "resize_keyboard": true}'})
+    bot.api.call("sendMessage", {"chat_id": chat.id, "text": '/seriea: seleziona una opzione', "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "\U0001F5DEPartite Giornata"}, {"text": "\U0001F51BPartite di Oggi"}], [{"text": "\U0001F51CPartite di Domani"}, {"text": "\U0001F4CAClassifica"}], [{"text":"\U000023F1RisultatiLive"}, {"text":"ScorsaGiorn"}]], "one_time_keyboard": false, "resize_keyboard": true}'})
 
 def serieaOutput(m, chat, shared):
   a=["",""]
   oggi=shared['giornata']
   if m=="\U0001F5DEPartite Giornata":
     a=shared['seriea']
+  elif m=="\U000023F1RisultatiLive":
+    a[0] = sport.live(oggi, shared['contLive'])
+    shared['contLive']+=1
   elif m=="\U0001F4CAClassifica":
     a[1]=sport.classifica()
     a[0]="Ecco la classifica di Serie A"
@@ -50,13 +53,15 @@ def serieaOutput(m, chat, shared):
     a[1]=sport.partiteOggiDom(oggi, 'oggi')
     if a[1]=='':
       a[0]='Non ci sono parite oggi'
+  elif m=="ScorsaGiorn":
+    a = sport.partiteGior((oggi-1))
   elif m=='\U0001F51CPartite di Domani':
     a[0]='Ecco le partite di domani'
     a[1]=sport.partiteOggiDom(oggi, 'dom')
     if a[1]=='':
       a[0]='Non sono previste partite per domani'
   if a[0]!='': 
-    bot.api.call("sendMessage", {"chat_id": chat.id, "text": a[0], "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "/seriea"}, {"text": "/cambio"}], [{"text": "/meteo"}]], "one_time_keyboard": false, "resize_keyboard": true}'})
+    bot.api.call("sendMessage", {"chat_id": chat.id, "text": a[0], "syntax": "HTML", "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "/seriea"}, {"text": "/cambio"}], [{"text": "/meteo"}]], "one_time_keyboard": false, "resize_keyboard": true}'})
   if a[1]!='': 
     bot.api.call("sendMessage", {"chat_id": chat.id, "text": a[1], "parse_mode": "HTML", "reply_markup": '{"keyboard": [[{"text": "/seriea"}, {"text": "/cambio"}], [{"text": "/meteo"}]], "one_time_keyboard": false, "resize_keyboard": true}'})
 
@@ -161,8 +166,9 @@ def wake_command(chat, message, args):
     chat.send('Solo @infopz puo eseguire questo comando')
 
 @bot.command('me', hidden=True)
-def provashames(chat, message, args, shared):
+def provashames(chat, message):
   print(message.text)
+  chat.send('Prova <b>Grassetto</b>', syntax='HTML')
 
 #Da Finire
 '''@bot.command('orario')
@@ -179,12 +185,16 @@ def orario_command(chat, message, args):
 #OTHER FUNCTIONS
 def control(mess):
   a=mess.text
+  st = ''
+  if a[0]=='/':
+    st = '  COMMAND  '
+  else: st = '  MESSAGE  '
   b='@'+str(mess.sender.username)
   now = datetime.now()
   h=str(time.strftime('%H'))
   m=str(time.strftime('%M'))
   s=str(time.strftime('%S'))
-  mes=h+':'+m+'.'+s+' -  COMMAND  - '+b+' '+a
+  mes=h+':'+m+'.'+s+' -'+st+'- '+b+' '+a
   print(mes)
 
 def controlInfopz(mess):
@@ -225,6 +235,14 @@ def aggMeteo(bot, shared):
   mess=altriCom.mOrario(dat, 10)
   shared['meteo'] = mess
 
+
+@bot.timer(3600)
+def resetLive(bot, shared):
+  now = datetime.now()
+  h=now.hour
+  if h==1:
+    shared['contLive'] = 0
+
 @bot.timer(7200)
 def aggSeriea(bot, shared):
   shared['giornata'] = sport.trovaGiornata()
@@ -236,7 +254,7 @@ def meteoDomani(bot):
    now = datetime.now()
    h=now.hour
    m=now.minute
-   if h==20 and m==00: 
+   if h==21 and m==00: 
      buong = open('listMeteo', 'r')
      for lines in buong.readlines():
         l = lines.split(' ', 2)
@@ -256,9 +274,11 @@ def prepare_memory(shared):
   shared['seriea'] = ser
   shared['tipoMet'] = ''
   shared['citta'] = ''
+  shared['contLive'] = 0
 
 @bot.process_message
 def message_received(chat, message, shared):
+  control(message)
   if shared['comm'] == 'seriea':
     serieaOutput(message.text, chat, shared)
 
